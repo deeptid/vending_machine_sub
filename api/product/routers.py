@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, status
+from user.controllers import get_users_by_username
+from fastapi import APIRouter, HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from product.controllers import (
@@ -44,8 +45,12 @@ def get_product_by_name(product_name: str):
 
 @router.post("/v1/product/", response_model=ProductResponseModel)
 async def create_product_api(product_details: ProductCreateRequestModel):
+    seller = get_users_by_username(product_details.seller)
+    if seller and seller['role'] != "seller":
+        raise HTTPException(status_code=403, detail="Permission denied")
+    
     create_product(product_details)
-    products = get_products_by_product_name(product_details.productname)
+    products = get_products_by_product_name(product_details.product_name)
     return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder(products[0]))
 
 
@@ -54,6 +59,9 @@ def update_product_api(product_id: int, product_details: ProductUpdateRequestMod
     """
     This product update API allow you to update product data.
     """
+    seller = get_users_by_username(product_details.seller)
+    if seller and seller['role'] != "seller":
+        raise HTTPException(status_code=403, detail="Permission denied")
     update_product(product_details)
     product = get_product_by_id(product_id)
     return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder(product))

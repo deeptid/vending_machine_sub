@@ -68,7 +68,7 @@ def create_product(product_model: ProductCreateRequestModel):
             status_code=status.HTTP_409_CONFLICT, detail="product_name already exists."
         )
     seller = get_users_by_username(product_model.seller)
-    if len(seller) == 0:
+    if not seller:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="seller does not exist."
         )

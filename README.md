@@ -22,4 +22,3 @@ docker-compose up
 
 - API server: http://localhost:8000
 - API Docs: http://localhost:8000/v1/docs
-- DB server: http://localhost:3306

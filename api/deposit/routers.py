@@ -1,3 +1,4 @@
+from user.controllers import get_users_by_username
 from deposit.controllers import create_deposit, get_all_deposits, get_deposit_by_user_name, reset_deposit
 from deposit.models import DepositCoinsRequestModel, DepositCreateRequestModel, DepositResetRequestModel, DepositResponseModel
 from fastapi import APIRouter, status, HTTPException
@@ -18,6 +19,10 @@ async def get_all_users_api():
 
 @router.post("/v1/deposit/", response_model=int)
 async def deposit_coins(deposit: DepositCoinsRequestModel):
+    depositer = get_users_by_username(deposit.username)
+    if depositer and depositer['role'] != "buyer":
+        raise HTTPException(status_code=403, detail="Permission denied")
+
     valid_coins = {5, 10, 20, 50, 100}
     for coin in deposit.coins:
         if coin not in valid_coins:
@@ -26,22 +31,24 @@ async def deposit_coins(deposit: DepositCoinsRequestModel):
     total_amount = sum(deposit.coins)
     existing_deposits = get_deposit_by_user_name(deposit.username)
     if len(existing_deposits) != 0:
-        total_amount += existing_deposits[0].amount
+        total_amount += existing_deposits[0]['amount']
 
-    model = DepositCreateRequestModel()
-    model.username = deposit.username
-    model.amount = total_amount
+    model = DepositCreateRequestModel(username=deposit.username, amount=total_amount)
+    print(model)
 
     create_deposit(model)
     return total_amount
 
+
 @router.post("/v1/reset/", response_model=int)
 async def reset_deposit_api(reset: DepositResetRequestModel):
-    # if current_user.role != "buyer":
-    #     raise HTTPException(status_code=403, detail="Permission denied")
+    depositer = get_users_by_username(reset.username)
+    if depositer and depositer['role'] != "buyer":
+        raise HTTPException(status_code=403, detail="Permission denied")
+   
     existing_deposits = get_deposit_by_user_name(reset.username)
     deposited_amount = 0
     if len(existing_deposits) != 0:
-        deposited_amount += existing_deposits[0].amount
+        deposited_amount += existing_deposits[0]['amount']
     reset_deposit(reset)
     return deposited_amount

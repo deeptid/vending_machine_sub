@@ -4,9 +4,10 @@ from user.models import UserCreateRequestModel, UserUpdateRequestModel
 
 database = DatabaseConnector() 
 
+
 def update_user(user_model: UserUpdateRequestModel) -> int:
     existing_user = get_users_by_username(user_model.username)
-    if len(existing_user) != 0 and existing_user[0]["id"] != user_model.id:
+    if existing_user["id"] != user_model.id:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="username is already in use by another user",
@@ -33,14 +34,14 @@ def get_all_users(limit: int = 10, offset: int = 0) -> list[dict]:
     return users
 
 
-def get_users_by_username(username: str) -> list[dict]:
+def get_users_by_username(username: str):
     users = database.query_get(
         """
         SELECT user.id, user.username, user.role from user where username = %s
         """,
         (username),
     )
-    return users
+    return users[0] if len(users) > 0 else None
 
 
 def get_user_by_id(id: int) -> dict:
@@ -60,9 +61,13 @@ def get_user_by_id(id: int) -> dict:
 def create_user(user_model: UserCreateRequestModel):
     database = DatabaseConnector()
     user = get_users_by_username(user_model.username)
-    if len(user) != 0:
+    if user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="username already exists."
+        )
+    if user_model.role not in ["seller", "buyer"]:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Role is not valid"
         )
     database.query_put(
         """

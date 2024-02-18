@@ -38,15 +38,15 @@ async def get_user_api(user_id: int):
 
 @router.get("/v1/users/{user_name}", response_model=UserResponseModel)
 async def get_user_by_name(user_name: str):
-    users = get_users_by_username(user_name)
-    return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder(users[0]))
+    user = get_users_by_username(user_name)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder(user))
 
 
 @router.post("/v1/user/", response_model=UserResponseModel)
 async def create_user_api(user_details: UserCreateRequestModel):
     create_user(user_details)
-    users = get_users_by_username(user_details.username)
-    return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder(users[0]))
+    user = get_users_by_username(user_details.username)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder(user))
 
 
 @router.put("/v1/user/{user_id}", response_model=UserResponseModel)

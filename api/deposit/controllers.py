@@ -1,5 +1,4 @@
 from deposit.models import DepositCreateRequestModel, DepositResetRequestModel
-from fastapi import HTTPException, status
 from database.connector import DatabaseConnector
 from user.models import UserCreateRequestModel, UserUpdateRequestModel
 
